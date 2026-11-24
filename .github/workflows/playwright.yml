@@ -31,7 +31,7 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-          cache-dependency-path: playwright-typescript-framework/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Setup Java 21 (Required for Allure Report)
         uses: actions/setup-java@v4
@@ -40,22 +40,21 @@ jobs:
           java-version: '21'
 
       - name: Install dependencies
-        working-directory: playwright-typescript-framework
         run: npm ci
 
       - name: Install Playwright Browsers & Dependencies
-        working-directory: playwright-typescript-framework
         run: npx playwright install --with-deps chromium
 
       - name: Execute Playwright E2E Tests
-        working-directory: playwright-typescript-framework
         env:
           HEADLESS: 'true'
-          BASE_URL: 'https://www.saucedemo.com'
+          BASE_URL: 'https://crm.anhtester.com/admin/authentication'
+          ADMIN_EMAIL: 'admin@example.com'
+          ADMIN_PASSWORD: '123456'
+          WORKERS: '1'
         run: npm run test:chromium
 
       - name: Generate Allure Report
-        working-directory: playwright-typescript-framework
         if: always()
         run: |
           npm run allure:generate
@@ -63,11 +62,10 @@ jobs:
 
       - name: Generate GitHub Actions Job Summary
         if: always()
-        working-directory: playwright-typescript-framework
         run: |
           echo "## 📊 Playwright E2E Test Execution Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Test Suite:** CRM Login Test Suite" >> $GITHUB_STEP_SUMMARY
+          echo "- **Test Suite:** CRM Authentication & Security Test Suite (35 Test Cases)" >> $GITHUB_STEP_SUMMARY
           echo "- **Runner:** Playwright Test (@playwright/test)" >> $GITHUB_STEP_SUMMARY
           echo "- **Browser:** Chromium (Desktop 1920x1080)" >> $GITHUB_STEP_SUMMARY
           echo "- **Report Type:** Allure Report with Environment Metadata & Screenshots" >> $GITHUB_STEP_SUMMARY
@@ -80,7 +78,7 @@ jobs:
         if: always()
         with:
           name: allure-results
-          path: playwright-typescript-framework/allure-results
+          path: allure-results
           retention-days: 14
 
       - name: Upload Allure HTML Report Artifact
@@ -88,7 +86,7 @@ jobs:
         if: always()
         with:
           name: allure-report
-          path: playwright-typescript-framework/allure-report
+          path: allure-report
           retention-days: 14
 
       - name: Upload Playwright Test Results & Traces Artifacts
@@ -96,13 +94,13 @@ jobs:
         if: always()
         with:
           name: playwright-test-results
-          path: playwright-typescript-framework/test-results
+          path: test-results
           retention-days: 14
 
       - name: Deploy Allure Report to GitHub Pages
-        if: always() && github.ref == 'refs/heads/main'
+        if: always() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: playwright-typescript-framework/allure-report
+          publish_dir: allure-report
           destination_dir: allure-report
