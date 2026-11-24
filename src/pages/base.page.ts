@@ -1,6 +1,7 @@
 import { Page, Locator, test } from '@playwright/test';
 import { Logger } from '../utils/logger.js';
 import { WaitHelper } from '../utils/wait.helper.js';
+import { envConfig } from '../config/env.config.js';
 
 export abstract class BasePage {
   public readonly page: Page;
@@ -45,7 +46,16 @@ export abstract class BasePage {
     elementName: string,
     isMasked: boolean = false
   ): Promise<void> {
-    const displayValue = isMasked ? '••••••••' : `"${value}"`;
+    const isSensitive =
+      isMasked ||
+      locatorSelector.toLowerCase().includes('password') ||
+      elementName.toLowerCase().includes('password') ||
+      (!!value &&
+        !!envConfig.credentials.adminEmail &&
+        value.trim().toLowerCase() === envConfig.credentials.adminEmail.trim().toLowerCase()) ||
+      (!!value && !!envConfig.credentials.adminPassword && value === envConfig.credentials.adminPassword);
+
+    const displayValue = isSensitive ? '••••••••' : `"${value}"`;
     await test.step(`Fill ${elementName} [Locator: "${locatorSelector}"] with value: ${displayValue}`, async () => {
       Logger.step('Fill', `${elementName} [${locatorSelector}] -> ${displayValue}`);
       await this.waitHelper.waitForElementVisible(locator);

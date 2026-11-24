@@ -48,9 +48,9 @@ jobs:
       - name: Execute Playwright E2E Tests
         env:
           HEADLESS: 'true'
-          BASE_URL: 'https://crm.anhtester.com/admin/authentication'
-          ADMIN_EMAIL: 'admin@example.com'
-          ADMIN_PASSWORD: '123456'
+          BASE_URL: ${{ vars.BASE_URL || secrets.BASE_URL || 'https://crm.anhtester.com/admin/authentication' }}
+          ADMIN_EMAIL: ${{ vars.ADMIN_EMAIL || secrets.ADMIN_EMAIL || 'admin@example.com' }}
+          ADMIN_PASSWORD: ${{ vars.ADMIN_PASSWORD || secrets.ADMIN_PASSWORD || '123456' }}
           WORKERS: '1'
         run: npm run test:chromium
 
