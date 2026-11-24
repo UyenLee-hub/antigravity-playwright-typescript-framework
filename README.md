@@ -141,8 +141,8 @@ RETRIES=0
 WORKERS=1
 
 # Credentials (Perfex CRM Demo)
-ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=123456
+ADMIN_EMAIL=
+ADMIN_PASSWORD=
 ```
 
 ---
