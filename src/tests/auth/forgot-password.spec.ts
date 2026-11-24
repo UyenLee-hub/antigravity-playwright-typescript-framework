@@ -5,6 +5,9 @@ import * as allure from 'allure-js-commons';
 
 test.describe('Forgot Password Feature Test Suite', () => {
   test.beforeEach(async ({ loginPage }) => {
+    await allure.parentSuite('chromium');
+    await allure.suite('Login Page');
+    await allure.subSuite('Forgot Password');
     await loginPage.open();
   });
 
