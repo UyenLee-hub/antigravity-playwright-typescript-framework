@@ -43,7 +43,7 @@ export const envConfig: AppConfig = {
   retries: Number(process.env.RETRIES) || 0,
   workers: Number(process.env.WORKERS) || 1,
   credentials: {
-    adminEmail: process.env.ADMIN_EMAIL || 'admin@example.com',
-    adminPassword: process.env.ADMIN_PASSWORD || '123456',
+    adminEmail: process.env.ADMIN_EMAIL || process.env.ADMIN_USERNAME || '',
+    adminPassword: process.env.ADMIN_PASSWORD || '',
   },
 };
