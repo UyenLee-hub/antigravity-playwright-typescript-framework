@@ -1,0 +1,108 @@
+name: Playwright E2E Tests & Allure Report
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'allure-report'
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Run Tests & Publish Allure Report
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js v20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: playwright-typescript-framework/package-lock.json
+
+      - name: Setup Java 21 (Required for Allure Report)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install dependencies
+        working-directory: playwright-typescript-framework
+        run: npm ci
+
+      - name: Install Playwright Browsers & Dependencies
+        working-directory: playwright-typescript-framework
+        run: npx playwright install --with-deps chromium
+
+      - name: Execute Playwright E2E Tests
+        working-directory: playwright-typescript-framework
+        env:
+          HEADLESS: 'true'
+          BASE_URL: 'https://www.saucedemo.com'
+        run: npm run test:chromium
+
+      - name: Generate Allure Report
+        working-directory: playwright-typescript-framework
+        if: always()
+        run: |
+          npm run allure:generate
+          npm run allure:single || true
+
+      - name: Generate GitHub Actions Job Summary
+        if: always()
+        working-directory: playwright-typescript-framework
+        run: |
+          echo "## 📊 Playwright E2E Test Execution Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Test Suite:** CRM Login Test Suite" >> $GITHUB_STEP_SUMMARY
+          echo "- **Runner:** Playwright Test (@playwright/test)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Browser:** Chromium (Desktop 1920x1080)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Report Type:** Allure Report with Environment Metadata & Screenshots" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Artifacts Download" >> $GITHUB_STEP_SUMMARY
+          echo "You can download the \`allure-report\` artifact below to view the interactive HTML report." >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Allure Results Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-results
+          path: playwright-typescript-framework/allure-results
+          retention-days: 14
+
+      - name: Upload Allure HTML Report Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-report
+          path: playwright-typescript-framework/allure-report
+          retention-days: 14
+
+      - name: Upload Playwright Test Results & Traces Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-test-results
+          path: playwright-typescript-framework/test-results
+          retention-days: 14
+
+      - name: Deploy Allure Report to GitHub Pages
+        if: always() && github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: playwright-typescript-framework/allure-report
+          destination_dir: allure-report
